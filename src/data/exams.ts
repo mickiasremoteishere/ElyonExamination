@@ -128,7 +128,7 @@ export const exams: Exam[] = [
     duration: 90,
     totalQuestions: 6,
     description: 'Final examination on poetry and prose analysis',
-    scheduledDate: '2024-12-25',
+    scheduledDate: '2025-01-15',
     status: 'upcoming',
     questions: [
       {
@@ -176,13 +176,13 @@ export const exams: Exam[] = [
   },
   {
     id: 'mock-2023-12',
-    title: 'Mock Entrance Exam - December 2023',
+    title: 'Mock Entrance Exam - Coming Soon',
     subject: 'General Knowledge',
     duration: 60,
     totalQuestions: 10,
     description: 'Practice test covering various subjects including science, history, and language',
-    scheduledDate: '2023-12-16',
-    status: 'ongoing',
+    scheduledDate: '2024-01-16',
+    status: 'upcoming',
     questions: [
       {
         id: 1,
