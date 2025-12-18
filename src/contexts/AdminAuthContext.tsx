@@ -47,6 +47,18 @@ const mockAdmins: Record<string, { password: string; admin: Admin }> = {
       role: 'admin',
     },
   },
+
+  'ZenaZPrestigious': {
+    password: 'Zenane@Prestigious',
+    admin: {
+      id: '2',
+      username: 'ZenaZPrestigious',
+      name: 'Zena Negash',
+      email: 'teacher@elyonaris.edu',
+      phone: '+1987654321',
+      role: 'admin',
+    },
+  },
 };
 
 export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
