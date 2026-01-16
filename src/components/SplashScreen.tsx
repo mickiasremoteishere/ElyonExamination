@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Sun, Moon } from 'lucide-react';
 
 const SplashScreen = ({ isLoading = true }: { isLoading?: boolean }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -69,18 +68,6 @@ const SplashScreen = ({ isLoading = true }: { isLoading?: boolean }) => {
         </div>
         
         <div className="absolute bottom-2 w-36 h-[5px] bg-black/10 dark:bg-white/10 rounded-full left-1/2 -translate-x-1/2"></div>
-        
-        <motion.button 
-          className="fixed top-6 right-6 p-2.5 bg-white dark:bg-gray-800 rounded-full shadow-sm border border-gray-100 dark:border-gray-700 active:scale-90 transition-transform"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => document.documentElement.classList.toggle('dark')}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300 block dark:hidden" />
-          <Moon className="w-5 h-5 text-gray-300 hidden dark:block" />
-        </motion.button>
       </motion.div>
     </AnimatePresence>
   );
