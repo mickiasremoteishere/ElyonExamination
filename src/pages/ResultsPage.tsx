@@ -1,6 +1,6 @@
 import { ExamResults } from '@/components/ExamResults';
 import { ExamSubmitted } from '@/components/ExamSubmitted';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/NewAuthContext';
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';

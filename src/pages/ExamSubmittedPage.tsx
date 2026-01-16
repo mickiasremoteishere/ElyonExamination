@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ExamSubmitted } from '@/components/ExamSubmitted';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/NewAuthContext';
 import { Loader2 } from 'lucide-react';
 
 const ExamSubmittedPage = () => {

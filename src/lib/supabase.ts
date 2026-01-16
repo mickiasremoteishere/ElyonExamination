@@ -460,14 +460,15 @@ export const hasStudentTakenExam = async (studentId: string, examId: string): Pr
       .select('*')
       .eq('student_id', studentId)
       .eq('exam_id', examId)
-      .maybeSingle();
+      .order('submitted_at', { ascending: false })
+      .limit(1);
 
     if (error) {
       console.error('Error checking exam attempt:', error);
       return null;
     }
 
-    return data as ExamResult | null;
+    return data && data.length > 0 ? data[0] as ExamResult : null;
   } catch (error) {
     console.error('Error in hasStudentTakenExam:', error);
     return null;

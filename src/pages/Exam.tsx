@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/NewAuthContext';
 import { exams, Question } from '@/data/exams';
 import { saveExamResult, hasStudentTakenExam, saveCancelledExam, saveViolation } from '@/lib/supabase';
 import { eueeVerbal2021Questions } from '@/data/eueeVerbalReasoning2021';

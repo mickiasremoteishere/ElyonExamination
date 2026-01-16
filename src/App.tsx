@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate, unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
 import { createBrowserHistory } from 'history';
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/NewAuthContext";
 import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -21,6 +21,7 @@ import ViolationsPage from "./pages/admin/ViolationsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import NotFound from "./pages/NotFound";
 import WelcomeScreen from "./components/WelcomeScreen";
+import ForgotIdPage from "./pages/ForgotIdPage";
 
 const queryClient = new QueryClient();
 const history = createBrowserHistory();
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/exam/:id" element={<Exam />} />
                 <Route path="/exam-submitted" element={<ExamSubmittedPage />} />
+                <Route path="/forgot-id" element={<ForgotIdPage />} />
                 <Route path="/exam-cancelled" element={<ExamCancelled />} />
                 <Route path="/results" element={<ResultsPage />} />
                 

@@ -33,18 +33,15 @@ const WelcomeScreen = () => {
   const features = [
     { 
       icon: <EditSquare className="w-5 h-5" />, 
-      title: "Mock Tests",
-      description: "Practice with our comprehensive test bank"
+      title: "Mock Tests"
     },
     { 
       icon: <Insights className="w-5 h-5" />, 
-      title: "Analytics",
-      description: "Track your progress and performance"
+      title: "Analytics"
     },
     { 
       icon: <Lightbulb className="w-5 h-5" />, 
-      title: "Insights",
-      description: "Get personalized study recommendations"
+      title: "Insights"
     }
   ];
 
@@ -115,9 +112,6 @@ const WelcomeScreen = () => {
                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 text-center">
                   {feature.title}
                 </span>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 text-center mt-1">
-                  {feature.description}
-                </p>
               </div>
             ))}
           </div>

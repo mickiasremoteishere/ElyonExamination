@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export interface Student {
@@ -24,99 +24,139 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [student, setStudent] = useState<Student | null>(null);
 
-  // Handle authentication state changes and initial session check
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Check for existing session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Error getting session:', sessionError);
-          setIsLoading(false);
-          return;
-        }
-        
-        if (session?.user) {
-          // Fetch student data from students_1 table instead of students
-          console.log('Fetching student data for email:', session.user.email);
-          const { data: studentData, error: studentError } = await supabase
-            .from('students_1')
-            .select('*')
-            .eq('admission_id', session.user.email) // Assuming email is used as admission_id
-            .maybeSingle();
-          
-          console.log('Student data from DB:', studentData);
-          console.log('Error from DB:', studentError);
-          
-          if (studentError) {
-            console.error('Error fetching student data:', studentError);
-          } else if (studentData) {
-            // Map the data to match our Student interface
-            const formattedStudentData: Student = {
-              id: studentData.id,
-              admission_id: studentData.admission_id || studentData.admissionId || '',
-              name: studentData.name || studentData.student_name || '',
-              class: studentData.class || studentData.class_name || '',
-              section: studentData.section || studentData.section_name || '',
-              roll_number: studentData.roll_number || studentData.rollNumber || studentData.roll_no || ''
-            };
-            console.log('Formatted student data:', formattedStudentData);
-            setStudent(formattedStudentData);
-          }
-        }
-      } catch (error) {
-        console.error('Auth error:', error);
-      } finally {
-        setIsLoading(false);
+  // Move fetchStudentData before any effects that use it
+  const fetchStudentData = useCallback(async (email: string) => {
+    try {
+      const { data: studentData, error } = await supabase
+        .from('students_1')
+        .select('*')
+        .eq('admission_id', email)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching student data:', error);
+        return null;
       }
-    };
 
+      if (studentData) {
+        const formattedStudentData: Student = {
+          id: studentData.id,
+          admission_id: studentData.admission_id || studentData.admissionId || '',
+          name: studentData.name || studentData.student_name || '',
+          class: studentData.class || studentData.class_name || '',
+          section: studentData.section || studentData.section_name || '',
+          roll_number: studentData.roll_number || studentData.rollNumber || studentData.roll_no || ''
+        };
+        return formattedStudentData;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error processing student data:', error);
+      return null;
+    }
+  }, []);
+
+  const checkAuth = useCallback(async () => {
+    try {
+      // First check for existing session in localStorage
+      const storedSession = localStorage.getItem('studentSession');
+      let currentStudent = null;
+      let shouldContinue = true;
+
+      if (storedSession) {
+        try {
+          const { student, expiresAt } = JSON.parse(storedSession);
+          if (expiresAt > Date.now()) {
+            currentStudent = student;
+            shouldContinue = false;
+          } else {
+            // Clear expired session
+            localStorage.removeItem('studentSession');
+          }
+        } catch (e) {
+          console.error('Error parsing stored session:', e);
+          localStorage.removeItem('studentSession');
+        }
+      }
+
+      // Only proceed with Supabase check if we don't have a valid session
+      if (shouldContinue) {
+        try {
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error('Error getting session:', sessionError);
+            return;
+          }
+
+          if (session?.user?.email) {
+            const studentData = await fetchStudentData(session.user.email);
+            if (studentData) {
+              currentStudent = studentData;
+              // Store the session in localStorage
+              localStorage.setItem('studentSession', JSON.stringify({
+                student: currentStudent,
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
+              }));
+            }
+          }
+        } catch (e) {
+          console.error('Error during Supabase auth check:', e);
+        }
+      }
+
+      // Update state once at the end
+      setStudent(currentStudent);
+    } catch (error) {
+      console.error('Auth error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchStudentData]);
+
+  // Initialize auth state on mount
+  useEffect(() => {
     checkAuth();
+  }, [checkAuth]);
 
-    // Listen for auth state changes
+  // Set up auth state change listener
+  useEffect(() => {
+    let mounted = true;
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         console.log('Auth state changed:', event);
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('User signed in, fetching student data for:', session.user.email);
-          // Fetch student data from students_1 table
-          const { data: studentData, error } = await supabase
-            .from('students_1')
-            .select('*')
-            .eq('admission_id', session.user.email) // Assuming email is used as admission_id
-            .maybeSingle();
-          
-          console.log('Auth state change - Student data:', studentData);
-          console.log('Auth state change - Error:', error);
-          
-          if (error) {
-            console.error('Error fetching student data on auth state change:', error);
-          } else if (studentData) {
-            // Map the data to match our Student interface with fallbacks
-            const formattedStudentData: Student = {
-              id: studentData.id,
-              admission_id: studentData.admission_id || studentData.admissionId || session.user.email || '',
-              name: studentData.name || studentData.student_name || '',
-              class: studentData.class || studentData.class_name || '',
-              section: studentData.section || studentData.section_name || '',
-              roll_number: studentData.roll_number || studentData.rollNumber || studentData.roll_no || ''
-            };
-            console.log('Auth state change - Formatted student data:', formattedStudentData);
-            setStudent(formattedStudentData);
+        if (event === 'SIGNED_IN' && session?.user?.email) {
+          try {
+            const studentData = await fetchStudentData(session.user.email);
+            if (studentData && mounted) {
+              setStudent(studentData);
+              // Update localStorage with new session
+              localStorage.setItem('studentSession', JSON.stringify({
+                student: studentData,
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
+              }));
+            }
+          } catch (error) {
+            console.error('Error handling sign in:', error);
           }
-        } else if (event === 'SIGNED_OUT') {
+        } else if (event === 'SIGNED_OUT' && mounted) {
+          // Clear the stored session on sign out
+          localStorage.removeItem('studentSession');
           setStudent(null);
         }
       }
     );
 
     return () => {
+      mounted = false;
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [fetchStudentData]);
 
-  const login = async (admissionId: string, password: string) => {
+  const login = useCallback(async (admissionId: string, password: string) => {
     try {
       console.log('Attempting login for admission ID:', admissionId);
       
@@ -139,33 +179,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!studentData) {
         console.error('Login error: No student found with admission ID:', admissionId);
-        
-        // Try to find any student to check if the table has data
-        const { data: anyStudent } = await supabase
-          .from('students_1')
-          .select('*')
-          .limit(1);
-          
-        console.log('Sample student data (first record):', anyStudent?.[0]);
-        
         return { success: false, error: 'Invalid Admission ID or Password' };
       }
 
-      // Log all fields from the student data for debugging
-      console.log('Raw student data fields:', Object.keys(studentData));
-      
       // Simple password check
       if (studentData.password !== password) {
         console.error('Login error: Invalid password');
         return { success: false, error: 'Invalid Admission ID or Password' };
       }
 
-      // Map the student data to match our Student interface with the actual database fields
+      // Map the student data to match our Student interface
       const formattedStudentData: Student = {
-        id: studentData.admission_id || '', // Using admission_id as ID since it's the primary key
+        id: studentData.admission_id || '',
         admission_id: studentData.admission_id || admissionId,
         name: studentData.full_name || `${studentData.first_name || ''} ${studentData.last_name || ''}`.trim(),
-        class: studentData.stream || studentData.class || '', // Using 'stream' as class if available
+        class: studentData.stream || studentData.class || '',
         section: studentData.section || '',
         roll_number: studentData.roll_number || ''
       };
@@ -176,25 +204,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.warn('Student name is empty. Available fields:', Object.entries(studentData));
       }
       
+      // Set the student data and store session in localStorage
       setStudent(formattedStudentData);
+      
+      // Store the session in localStorage to persist across page refreshes
+      localStorage.setItem('studentSession', JSON.stringify({
+        student: formattedStudentData,
+        expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
+      }));
+
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: 'An unexpected error occurred' };
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
+    // Clear the stored session
+    localStorage.removeItem('studentSession');
     setStudent(null);
-  };
+  }, []);
 
-  const value = {
+  const value = React.useMemo(() => ({
     student,
     login,
     logout,
     isAuthenticated: !!student,
     isLoading,
-  };
+  }), [student, login, logout, isLoading]);
 
   return (
     <AuthContext.Provider value={value}>

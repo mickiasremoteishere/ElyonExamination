@@ -1,31 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/NewAuthContext';
 import { Loader2, LogIn, Eye, EyeOff, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
 
 const Index = () => {
+  // State hooks
   const [admissionId, setAdmissionId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [tapCount, setTapCount] = useState(0);
+  
+  // Refs
   const tapTimeout = useRef<number | null>(null);
-  const { login, isAuthenticated } = useAuth();
+  
+  // Context hooks
+  const { login, isAuthenticated, isInitialized } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
-
-  if (isAuthenticated) {
-    return null;
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,25 +34,34 @@ const Index = () => {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     
-    const result = await login(admissionId, password);
-    
-    if (result.success) {
+    try {
+      const result = await login(admissionId, password);
+      
+      if (result.success) {
+        toast({
+          title: 'Welcome!',
+          description: 'Login successful. Redirecting to dashboard...',
+        });
+        // Navigation is handled by the useEffect hook
+      } else {
+        toast({
+          title: 'Login Failed',
+          description: result.error || 'Invalid Admission ID or Password. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
       toast({
-        title: 'Welcome!',
-        description: 'Login successful. Redirecting to dashboard...',
-      });
-      navigate('/dashboard');
-    } else {
-      toast({
-        title: 'Login Failed',
-        description: result.error || 'Invalid Admission ID or Password. Please try again.',
+        title: 'Error',
+        description: 'An error occurred during login. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsLoading(false);
   };
 
   const handleLogoClick = () => {
@@ -87,6 +91,13 @@ const Index = () => {
     }
   };
 
+  // Effects
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -95,6 +106,15 @@ const Index = () => {
       }
     };
   }, []);
+  
+  // Show loading state while auth is initializing
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background flex items-center justify-center p-4">
@@ -134,9 +154,9 @@ const Index = () => {
                 type="text"
                 value={admissionId}
                 onChange={(e) => setAdmissionId(e.target.value)}
-                placeholder="Enter your Admission ID"
+                disabled={isSubmitting}
+                placeholder="Enter your admission ID"
                 className="w-full px-4 py-3 bg-background border border-input rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200"
-                disabled={isLoading}
               />
             </div>
 
@@ -152,7 +172,7 @@ const Index = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   className="w-full px-4 py-3 bg-background border border-input rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200 pr-12"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
                 <button
                   type="button"
@@ -164,24 +184,32 @@ const Index = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed animate-slide-up shadow-soft hover:shadow-glow"
-              style={{ animationDelay: '300ms' }}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  <LogIn size={18} />
-                  Sign In
-                </>
-              )}
-            </button>
+            <div className="space-y-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-3 px-4 rounded-xl font-medium hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 transition-all duration-200 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-5 w-5" />
+                    Sign In
+                  </>
+                )}
+              </button>
+              
+              <Link 
+                to="/forgot-id" 
+                className="w-full bg-green-50 text-green-700 py-2 px-4 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-offset-2 transition-all duration-200 border border-green-100 text-sm"
+              >
+                Forgot ID?
+              </Link>
+            </div>
           </form>
           
           {/* Website Link */}
