@@ -1,6 +1,6 @@
 // src/pages/AdminLogin.tsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Loader2, Shield, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -13,9 +13,24 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuperadminMode, setIsSuperadminMode] = useState(false);
   const { login, isAuthenticated, admin } = useAdminAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  
+  // Check for superadmin parameter in URL
+  useEffect(() => {
+    const superadminParam = searchParams.get('superadmin');
+    if (superadminParam === 'true') {
+      setIsSuperadminMode(true);
+      toast({
+        title: 'Superadmin Mode',
+        description: 'You are accessing the superadmin login.',
+        variant: 'default',
+      });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     console.log('Auth state changed:', { isAuthenticated, admin });
@@ -80,11 +95,17 @@ const AdminLogin = () => {
       <div className="w-full max-w-md relative">
         <div className="bg-card border border-border rounded-2xl shadow-elevated p-8 animate-scale-in">
           <div className="flex flex-col items-center mb-8">
-            <div className="bg-primary p-4 rounded-2xl mb-4 animate-fade-in">
-              <Shield className="h-12 w-12 text-primary-foreground" />
+            <div className={`p-4 rounded-2xl mb-4 animate-fade-in ${isSuperadminMode ? 'bg-destructive/20' : 'bg-primary'}`}>
+              <Shield className={`h-12 w-12 ${isSuperadminMode ? 'text-destructive' : 'text-primary-foreground'}`} />
             </div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Admin Portal</h1>
-            <p className="text-muted-foreground text-sm mt-1">Sign in to manage exams & students</p>
+            <h1 className="text-2xl font-display font-bold text-foreground">
+              {isSuperadminMode ? 'Superadmin Portal' : 'Admin Portal'}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1 text-center">
+              {isSuperadminMode 
+                ? 'Superuser access to manage system settings and users' 
+                : 'Sign in to manage exams & students'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">

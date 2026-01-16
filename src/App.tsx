@@ -14,11 +14,15 @@ import ExamSubmittedPage from "./pages/ExamSubmittedPage";
 import ExamCancelled from "./pages/ExamCancelled";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
+import SuperadminLayout from "./components/admin/SuperadminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import SuperadminDashboard from "./pages/admin/SuperadminDashboard";
 import StudentsPage from "./pages/admin/StudentsPage";
 import AdminResultsPage from "./pages/admin/ResultsPage";
 import ViolationsPage from "./pages/admin/ViolationsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
+import ExamManagement from "./pages/admin/superadmin/ExamManagement";
+import UserAccessManagement from "./pages/admin/superadmin/UserAccessManagement";
 import NotFound from "./pages/NotFound";
 import WelcomeScreen from "./components/WelcomeScreen";
 import ForgotIdPage from "./pages/ForgotIdPage";
@@ -63,6 +67,25 @@ function App() {
                     <Route path="results" element={<AdminResultsPage />} />
                     <Route path="violations" element={<ViolationsPage />} />
                     <Route path="settings" element={<SettingsPage />} />
+                  </Route>
+                  
+                  {/* Superadmin Routes */}
+                  <Route path="superadmin" element={<SuperadminLayout />}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<SuperadminDashboard />} />
+                    
+                    {/* Exam Management Routes */}
+                    <Route path="exams" element={<ExamManagement />}>
+                      <Route index element={<Navigate to="status" replace />} />
+                      <Route path="status" element={<div>Exam Status</div>} />
+                      <Route path="schedule" element={<div>Exam Schedule</div>} />
+                      <Route path="configure" element={<div>Configure Exam</div>} />
+                    </Route>
+                    
+                    {/* User Access Management */}
+                    <Route path="users" element={<UserAccessManagement />} />
+                    
+                    {/* Add more superadmin specific routes here */}
                   </Route>
                 </Route>
                 

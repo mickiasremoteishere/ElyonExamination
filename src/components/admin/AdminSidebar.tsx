@@ -11,7 +11,9 @@ import {
   ChevronDown,
   ChevronUp,
   Settings,
-  User
+  User,
+  BookOpen,
+  UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
 import logo from '@/assets/logo.png';
@@ -23,6 +25,9 @@ const menuItems = [
   { path: '/admin/results', label: 'Results', icon: FileText },
   { path: '/admin/violations', label: 'Violations', icon: AlertTriangle },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
+  // Super Admin specific routes - only visible to superadmins
+  { path: '/admin/superadmin/exams', label: 'Exam Management', icon: BookOpen, isSuperAdmin: true },
+  { path: '/admin/superadmin/users', label: 'User Access', icon: UserCheck, isSuperAdmin: true },
 ];
 
 const AdminSidebar = () => {
@@ -36,6 +41,11 @@ const AdminSidebar = () => {
     logout();
     navigate('/admin/login');
   };
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => 
+    !item.isSuperAdmin || (admin && admin.role === 'superadmin')
+  );
 
   return (
     <aside 
@@ -57,24 +67,27 @@ const AdminSidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                isActive 
-                  ? 'bg-primary-foreground text-primary' 
-                  : 'text-primary-foreground/80 hover:bg-primary-foreground/10'
-              }`}
-            >
-              <item.icon size={20} />
-              {!collapsed && <span className="font-medium">{item.label}</span>}
-            </button>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto py-4">
+        <ul className="space-y-1 px-2">
+          {filteredMenuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <li key={item.path}>
+                <button
+                  onClick={() => navigate(item.path)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-primary-foreground text-primary' 
+                      : 'text-primary-foreground/80 hover:bg-primary-foreground/10'
+                  }`}
+                >
+                  <item.icon size={20} />
+                  {!collapsed && <span className="font-medium">{item.label}</span>}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
 
         {/* Students List Section */}
         <div className={`mt-4 ${collapsed ? 'hidden' : ''}`}>

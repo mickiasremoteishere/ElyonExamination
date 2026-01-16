@@ -18,6 +18,8 @@ const WelcomeScreen = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
+  const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showSuperadminPrompt, setShowSuperadminPrompt] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -45,8 +47,36 @@ const WelcomeScreen = () => {
     }
   ];
 
+  const startPressTimer = () => {
+    // Clear any existing timer
+    if (pressTimer) clearTimeout(pressTimer);
+    
+    // Start a new timer
+    const timer = setTimeout(() => {
+      setShowSuperadminPrompt(true);
+      // After showing the prompt, navigate to admin login
+      setTimeout(() => {
+        navigate('/admin/login?superadmin=true');
+      }, 1000);
+    }, 2000); // 2 second long press
+    
+    setPressTimer(timer);
+  };
+
+  const cancelPressTimer = () => {
+    // Clear the timer if it exists
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+    setShowSuperadminPrompt(false);
+  };
+
   return (
-    <div className="relative min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-hidden">
+    <div 
+      className="relative min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-hidden"
+      onContextMenu={(e) => e.preventDefault()} // Prevent context menu on long press
+    >
       {/* Splash Screen */}
       {showSplash && <SplashScreen isLoading={true} />}
       
@@ -62,11 +92,25 @@ const WelcomeScreen = () => {
             <div className="absolute inset-0 bg-primary/10 dark:bg-primary/5 rounded-full blur-3xl scale-125"></div>
             <div className="absolute inset-0 border-2 border-dashed border-primary/20 rounded-full animate-[spin_20s_linear_infinite]"></div>
             <div className="relative z-10 w-48 h-48 flex items-center justify-center">
-              <img 
-                alt="Elyon Examination Logo" 
-                className="w-full h-full object-contain drop-shadow-[0_10px_30px_rgba(76,175,80,0.4)] dark:drop-shadow-[0_10px_30px_rgba(46,125,50,0.6)]" 
-                src="/logo2.png"
-              />
+              <div 
+                className="w-full h-full relative"
+                onMouseDown={startPressTimer}
+                onMouseUp={cancelPressTimer}
+                onMouseLeave={cancelPressTimer}
+                onTouchStart={startPressTimer}
+                onTouchEnd={cancelPressTimer}
+              >
+                <img 
+                  alt="Elyon Examination Logo" 
+                  className="w-full h-full object-contain drop-shadow-[0_10px_30px_rgba(76,175,80,0.4)] dark:drop-shadow-[0_10px_30px_rgba(46,125,50,0.6)]" 
+                  src="/logo2.png"
+                />
+                {showSuperadminPrompt && (
+                  <div className="absolute -bottom-8 left-0 right-0 text-xs text-primary font-medium text-center animate-pulse">
+                    Superadmin Mode
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           

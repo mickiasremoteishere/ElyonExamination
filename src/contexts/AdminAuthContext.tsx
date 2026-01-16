@@ -25,6 +25,17 @@ const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefin
 
 // Mock admin data with additional fields
 const mockAdmins: Record<string, { password: string; admin: Admin }> = {
+  'ERGO FOOD': {
+    password: '1234',
+    admin: {
+      id: 'super1',
+      username: 'ERGO FOOD',
+      name: 'Super Administrator',
+      email: 'superadmin@elyonaris.edu',
+      phone: '+1234567890',
+      role: 'superadmin',
+    },
+  },
   'ErgoZFood': {
     password: 'ERGO@ELYON+1234',
     admin: {
@@ -47,11 +58,10 @@ const mockAdmins: Record<string, { password: string; admin: Admin }> = {
       role: 'admin',
     },
   },
-
   'ZenaZPrestigious': {
     password: 'Zenane@Prestigious',
     admin: {
-      id: '2',
+      id: '3',
       username: 'ZenaZPrestigious',
       name: 'Zena Negash',
       email: 'teacher@elyonaris.edu',
