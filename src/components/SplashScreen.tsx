@@ -1,205 +1,86 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { BookOpen, Award, Clock, GraduationCap } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 const SplashScreen = ({ isLoading = true }: { isLoading?: boolean }) => {
-  const [progress, setProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const [currentState, setCurrentState] = useState(0);
 
-  // Loading states with icons and colors
-  const loadingStates = [
-    {
-      text: 'Preparing your exam environment',
-      icon: <BookOpen className="w-5 h-5" />,
-      color: 'from-green-600 to-emerald-500'
-    },
-    {
-      text: 'Loading exam materials',
-      icon: <Award className="w-5 h-5" />,
-      color: 'from-green-500 to-emerald-400'
-    },
-    {
-      text: 'Securing your connection',
-      icon: <Clock className="w-5 h-5" />,
-      color: 'from-emerald-500 to-green-400'
-    },
-    {
-      text: 'Finalizing setup',
-      icon: <GraduationCap className="w-5 h-5" />,
-      color: 'from-green-600 to-emerald-500'
-    }
-  ];
-
-  // Simulate loading progress
+  // Simulate loading
   useEffect(() => {
     if (!isLoading) {
       const timer = setTimeout(() => setIsVisible(false), 500);
       return () => clearTimeout(timer);
     }
-
-    const interval = setInterval(() => {
-      setProgress(prev => Math.min(prev + (100 - prev) * 0.05, 100));
-    }, 100);
-
-    const stateInterval = setInterval(() => {
-      setCurrentState(prev => (prev + 1) % loadingStates.length);
-    }, 2000);
-
-    return () => {
-      clearInterval(interval);
-      clearInterval(stateInterval);
-    };
-  }, [isLoading, loadingStates.length]);
+  }, [isLoading]);
 
   if (!isVisible) return null;
-
-  const current = loadingStates[currentState];
 
   return (
     <AnimatePresence>
       <motion.div 
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden"
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-between bg-off-white dark:bg-[#121212] font-sans transition-colors duration-500 overflow-hidden"
         initial={{ opacity: 1 }}
         animate={{ opacity: isVisible ? 1 : 0 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Gradient Corners */}
-        <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-gradient-to-br from-green-500/20 to-transparent rounded-br-full" />
-        <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-bl from-green-500/20 to-transparent rounded-bl-full" />
-        <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-tr from-green-500/20 to-transparent rounded-tr-full" />
-        <div className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-gradient-to-tl from-green-500/20 to-transparent rounded-tl-full" />
-        <div className="relative w-full max-w-md px-6">
-          {/* Animated Background Elements */}
-          <div className="absolute inset-0 overflow-hidden opacity-10 dark:opacity-5">
-            {[...Array(4)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute rounded-full bg-green-500"
-                style={{
-                  width: Math.random() * 200 + 100 + 'px',
-                  height: Math.random() * 200 + 100 + 'px',
-                  left: Math.random() * 100 + '%',
-                  top: Math.random() * 100 + '%',
-                  opacity: 0.05 + Math.random() * 0.05
-                }}
-                animate={{
-                  x: [0, (Math.random() - 0.5) * 20],
-                  y: [0, (Math.random() - 0.5) * 20],
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{
-                  duration: 15 + Math.random() * 15,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                  ease: 'linear'
-                }}
-              />
-            ))}
+        <div className="h-14 w-full"></div>
+        
+        <div className="flex-1 flex flex-col items-center justify-center w-full px-10">
+          <div className="relative w-56 h-56 mb-10 flex items-center justify-center">
+            <div className="absolute inset-0 bg-primary/15 dark:bg-primary/10 rounded-full blur-3xl"></div>
+            <img 
+              alt="Elyon Examination Logo" 
+              className="w-full h-full object-contain relative z-10" 
+              src="/logo.png"
+            />
           </div>
-
-          {/* Main Content */}
-          <div className="relative z-10">
-            {/* Logo Container */}
-            <motion.div 
-              className="mx-auto mb-8 w-32 h-32 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 p-1 shadow-lg"
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ 
-                duration: 0.6,
-                type: 'spring',
-                damping: 10,
-                stiffness: 100
-              }}
-            >
-              <div className="flex items-center justify-center h-full w-full">
-                <img 
-                  src="/logo.png" 
-                  alt="Elyon" 
-                  className="h-20 w-20 object-contain"
-                />
-              </div>
-            </motion.div>
-
-            {/* Title */}
+          
+          <div className="text-center space-y-2">
             <motion.h1 
-              className="text-4xl font-bold text-center mb-3 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-500"
+              className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
+              transition={{ duration: 0.5 }}
             >
-              Elyon Examination
+              Elyon <span className="text-primary">Examination</span>
             </motion.h1>
-
             <motion.p 
-              className="text-center text-gray-600 dark:text-gray-300 mb-8 text-lg"
+              className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-[0.25em]"
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 0.8 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
             >
-              Your Gateway to Academic Excellence
+              Excellence in Learning
             </motion.p>
-
-            {/* Loading State */}
-            <div className="space-y-6">
-              {/* Loading Message */}
-              <motion.div 
-                className="flex items-center justify-center space-x-3 text-gray-700 dark:text-gray-200"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                <motion.div
-                  className={`p-2 rounded-lg bg-gradient-to-br ${current.color} shadow-md`}
-                  animate={{ 
-                    rotate: 360,
-                    scale: [1, 1.05, 1]
-                  }}
-                  transition={{ 
-                    duration: 3, 
-                    repeat: Infinity,
-                    ease: "linear"
-                  }}
-                >
-                  {current.icon}
-                </motion.div>
-                <span className="text-lg font-medium">{current.text}...</span>
-              </motion.div>
-
-              {/* Progress Bar */}
-              <motion.div 
-                className="space-y-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-              >
-                <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div 
-                    className={`h-full rounded-full bg-gradient-to-r ${current.color}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
-                </div>
-                <div className="text-center text-sm text-gray-400">
-                  Loading... {Math.round(progress)}%
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Footer */}
-            <motion.div 
-              className="mt-10 text-center text-xs text-gray-400 dark:text-gray-500"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.7 }}
-              transition={{ delay: 0.8 }}
-            >
-              <p> {new Date().getFullYear()} Elyon Examination</p>
-              <p className="mt-1 text-[11px]">Precision in Assessment, Excellence in Education</p>
-            </motion.div>
           </div>
         </div>
+        
+        <div className="pb-24 flex flex-col items-center">
+          <motion.div 
+            className="relative w-7 h-7"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <div className="absolute inset-0 border-[3px] border-gray-200 dark:border-gray-800 rounded-full"></div>
+            <div className="absolute inset-0 border-[3px] border-primary border-t-transparent rounded-full animate-spin"></div>
+          </motion.div>
+        </div>
+        
+        <div className="absolute bottom-2 w-36 h-[5px] bg-black/10 dark:bg-white/10 rounded-full left-1/2 -translate-x-1/2"></div>
+        
+        <motion.button 
+          className="fixed top-6 right-6 p-2.5 bg-white dark:bg-gray-800 rounded-full shadow-sm border border-gray-100 dark:border-gray-700 active:scale-90 transition-transform"
+          whileTap={{ scale: 0.95 }}
+          onClick={() => document.documentElement.classList.toggle('dark')}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300 block dark:hidden" />
+          <Moon className="w-5 h-5 text-gray-300 hidden dark:block" />
+        </motion.button>
       </motion.div>
     </AnimatePresence>
   );
