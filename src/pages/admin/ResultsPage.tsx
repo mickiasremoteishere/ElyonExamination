@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Download, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { Search, Filter, Download, TrendingUp, TrendingDown, AlertCircle, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { notifyResultsPublished } from '@/utils/examNotifications';
 import { supabase, queryWithRetry } from '@/lib/supabase';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
@@ -15,6 +17,7 @@ interface ExamResult {
   answers: Record<string, any>;
   time_spent: number;
   submitted_at: string;
+  status: 'pending' | 'submitted' | 'cancelled' | 'published';
 }
 
 const ResultsPage = () => {
@@ -60,7 +63,8 @@ const ResultsPage = () => {
             score_percentage: 75,
             answers: {},
             time_spent: 1800,
-            submitted_at: new Date().toISOString()
+            submitted_at: new Date().toISOString(),
+            status: 'pending'
           },
           // Add more sample data as needed
         ]);
@@ -80,8 +84,24 @@ const ResultsPage = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Define the transformed result type
+  interface TransformedResult {
+    id: string;
+    studentName: string;
+    admissionId: string;
+    examTitle: string;
+    score: number;
+    totalQuestions: number;
+    percentage: number;
+    status: ExamResult['status'];
+    timeSpent: number;
+    duration: string;
+    class: string;
+    section: string;
+  }
+
   // Transform results to match the expected format
-  const transformedResults = results.map(result => ({
+  const transformedResults: TransformedResult[] = results.map(result => ({
     id: result.id,
     studentName: result.student_name,
     admissionId: result.student_id,
@@ -89,7 +109,7 @@ const ResultsPage = () => {
     score: result.correct_answers,
     totalQuestions: result.total_questions,
     percentage: Math.round(result.score_percentage),
-    status: result.answers?._cancelled ? 'cancelled' : 'submitted',
+    status: result.status,
     timeSpent: result.time_spent || 0, // Store the raw seconds
     duration: formatDuration(result.time_spent || 0), // Formatted as mm:ss
     class: result.answers?.class || 'N/A',
@@ -114,6 +134,39 @@ const ResultsPage = () => {
   const submittedCount = filteredResults.filter(r => r.status === 'submitted').length;
   const totalCount = filteredResults.length;
   const submittedRate = totalCount > 0 ? Math.round((submittedCount / totalCount) * 100) : 0;
+
+  const handlePublishResults = async (examId: string) => {
+    try {
+      // In a real app, this would update the database
+      // await updateResultsStatus(examId, 'published');
+      
+      // Update local state
+      const updatedResults = results.map(result => {
+        if (result.exam_id === examId) {
+          return { 
+            ...result, 
+            status: 'published' as const 
+          };
+        }
+        return result;
+      });
+      
+      setResults(updatedResults);
+      
+      // Find the exam to get its title
+      const exam = updatedResults.find(r => r.exam_id === examId);
+      if (exam) {
+        // Send notification to students
+        await notifyResultsPublished(exam.exam_title, examId);
+      }
+      
+      // Show success message (you might want to use a toast notification here)
+      console.log(`Results published for exam ${examId}`);
+    } catch (error) {
+      console.error('Error publishing results:', error);
+      // Handle error (e.g., show error toast)
+    }
+  };
 
   if (isLoading) {
     return (
@@ -212,6 +265,7 @@ const ResultsPage = () => {
           <option value="all">All Status</option>
           <option value="submitted">Submitted</option>
           <option value="cancelled">Cancelled</option>
+          <option value="published">Published</option>
         </select>
       </div>
 
@@ -228,6 +282,7 @@ const ResultsPage = () => {
                 <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Percentage</th>
                 <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Duration</th>
                 <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -271,16 +326,41 @@ const ResultsPage = () => {
                           ? 'bg-success/10 text-success border border-success/20' 
                           : result.status === 'cancelled'
                             ? 'bg-destructive/10 text-destructive border border-destructive/20'
-                            : 'bg-muted/10 text-muted-foreground border border-border'
+                            : result.status === 'published'
+                              ? 'bg-primary/10 text-primary border border-primary/20'
+                              : 'bg-muted/10 text-muted-foreground border border-border'
                       }`}>
                         {result.status}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {result.status === 'published' ? (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled
+                          className="flex items-center gap-2"
+                        >
+                          <Bell className="h-4 w-4 text-green-500" />
+                          <span>Results Published</span>
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handlePublishResults(result.examTitle)}
+                          className="flex items-center gap-2"
+                        >
+                          <Bell className="h-4 w-4" />
+                          <span>Publish Results</span>
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                     No results found matching your criteria
                   </td>
                 </tr>

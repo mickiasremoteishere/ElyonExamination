@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/NewAuthContext';
 import { exams, Question } from '@/data/exams';
 import { saveExamResult, hasStudentTakenExam, saveCancelledExam, saveViolation } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 import { eueeVerbal2021Questions } from '@/data/eueeVerbalReasoning2021';
 import { verbalReasoningQuestions } from '@/data/verbalReasoningQuestions';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -246,6 +247,90 @@ const Exam = () => {
     }
   }, [exam, student, navigate, toast]);
 
+  // Generate a unique watermark ID for this exam session
+  const watermarkId = useRef(`exam-${student?.id || 'user'}-${Date.now()}-${uuidv4().substring(0, 8)}`);
+
+  // Add watermark to prevent useful screenshots
+  useEffect(() => {
+    if (isSubmitted) return;
+
+    const createWatermark = () => {
+      // Create watermark container
+      const watermark = document.createElement('div');
+      watermark.id = 'exam-watermark';
+      
+      // Add student info to watermark
+      const studentInfo = student ? `Student: ${student.name || 'Unknown'} (ID: ${student.id})` : 'Unauthorized User';
+      const examInfo = exam ? `Exam: ${exam.title} (${exam.id})` : 'Exam Session';
+      const timestamp = new Date().toISOString();
+      
+      // Create watermark text with student and exam info
+      const watermarkText = `${studentInfo} | ${examInfo} | ${timestamp} | ${watermarkId.current}`;
+      
+      // Create multiple watermarks for better coverage
+      for (let i = 0; i < 50; i++) {
+        const span = document.createElement('div');
+        span.textContent = watermarkText;
+        span.style.position = 'fixed';
+        span.style.pointerEvents = 'none';
+        span.style.opacity = '0.1';
+        span.style.transform = `rotate(${Math.random() * 30 - 15}deg)`;
+        span.style.fontSize = '14px';
+        span.style.whiteSpace = 'nowrap';
+        span.style.color = 'red';
+        span.style.zIndex = '9999';
+        
+        // Position watermarks randomly on the screen
+        span.style.left = `${Math.random() * 100}%`;
+        span.style.top = `${Math.random() * 100}%`;
+        
+        // Add some variation to make it harder to remove
+        if (i % 3 === 0) span.style.fontWeight = 'bold';
+        if (i % 5 === 0) span.style.textDecoration = 'underline';
+        
+        watermark.appendChild(span);
+      }
+      
+      // Make it hard to inspect/remove the watermark
+      Object.defineProperty(watermark, 'innerHTML', {
+        get: () => 'Exam content protected',
+        set: () => {}
+      });
+      
+      document.body.appendChild(watermark);
+      
+      // Periodically change watermark positions to make it harder to remove
+      const moveWatermark = () => {
+        const watermarks = document.querySelectorAll('#exam-watermark > div');
+        watermarks.forEach(span => {
+          if (Math.random() > 0.7) { // Only move some watermarks at a time
+            (span as HTMLElement).style.left = `${Math.random() * 100}%`;
+            (span as HTMLElement).style.top = `${Math.random() * 100}%`;
+          }
+        });
+      };
+      
+      const interval = setInterval(moveWatermark, 5000);
+      
+      return () => {
+        clearInterval(interval);
+        if (document.body.contains(watermark)) {
+          document.body.removeChild(watermark);
+        }
+      };
+    };
+    
+    const cleanup = createWatermark();
+    
+    return () => {
+      if (cleanup) cleanup();
+      const existingWatermark = document.getElementById('exam-watermark');
+      if (existingWatermark && document.body.contains(existingWatermark)) {
+        document.body.removeChild(existingWatermark);
+      }
+    };
+  }, [isSubmitted, exam, student]);
+
   // Screenshot detection and prevention
   // Track previous window dimensions for mobile screenshot detection
   const prevDimensions = useRef({
@@ -342,6 +427,33 @@ const Exam = () => {
       if (currentOrientation !== prevDimensions.current.orientation) {
         showScreenshotWarning('Screen orientation changed! This action has been logged.');
         handleViolation('suspicious_activity', 'Screen orientation changed, possible screenshot attempt');
+        
+        // Add a more visible warning that persists
+        const warning = document.createElement('div');
+        warning.textContent = '⚠️ SCREENSHOT ATTEMPT DETECTED - This has been logged';
+        warning.style.position = 'fixed';
+        warning.style.top = '10px';
+        warning.style.left = '50%';
+        warning.style.transform = 'translateX(-50%)';
+        warning.style.backgroundColor = 'rgba(255, 0, 0, 0.9)';
+        warning.style.color = 'white';
+        warning.style.padding = '15px 25px';
+        warning.style.borderRadius = '5px';
+        warning.style.zIndex = '10000';
+        warning.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+        warning.style.fontWeight = 'bold';
+        warning.style.textAlign = 'center';
+        warning.style.maxWidth = '90%';
+        warning.style.wordBreak = 'break-word';
+        
+        document.body.appendChild(warning);
+        
+        // Remove warning after 10 seconds
+        setTimeout(() => {
+          if (document.body.contains(warning)) {
+            document.body.removeChild(warning);
+          }
+        }, 10000);
       }
       
       // If dimensions changed significantly, it might be a screenshot
@@ -350,7 +462,16 @@ const Exam = () => {
       
       if (widthDiff > 100 || heightDiff > 100) {
         showScreenshotWarning('Suspicious screen change detected!');
-        handleViolation('suspicious_activity', 'Significant screen size change detected');
+        handleViolation('suspicious_activity', `Screen size changed (${widthDiff}x${heightDiff}), possible screenshot attempt`);
+      }
+      
+      // Check for common screenshot tool dimensions
+      const commonScreenshotWidths = [1920, 1366, 1280, 1024, 800];
+      const commonScreenshotHeights = [1080, 768, 800, 600];
+      
+      if (commonScreenshotWidths.includes(currentWidth) && commonScreenshotHeights.includes(currentHeight)) {
+        showScreenshotWarning('Suspicious screen resolution detected!');
+        handleViolation('suspicious_activity', `Suspicious screen resolution detected: ${currentWidth}x${currentHeight}`);
       }
       
       // Update previous dimensions

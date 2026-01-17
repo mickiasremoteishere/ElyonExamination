@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,8 @@ import { Routes, Route, Navigate, unstable_HistoryRouter as HistoryRouter } from
 import { createBrowserHistory } from 'history';
 import { AuthProvider } from "@/contexts/NewAuthContext";
 import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
+import TitleBar from "./components/TitleBar";
+import { initializeOneSignal } from './utils/onesignal';
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Exam from "./pages/Exam";
@@ -21,8 +24,6 @@ import StudentsPage from "./pages/admin/StudentsPage";
 import AdminResultsPage from "./pages/admin/ResultsPage";
 import ViolationsPage from "./pages/admin/ViolationsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
-import ExamManagement from "./pages/admin/superadmin/ExamManagement";
-import UserAccessManagement from "./pages/admin/superadmin/UserAccessManagement";
 import NotFound from "./pages/NotFound";
 import WelcomeScreen from "./components/WelcomeScreen";
 import ForgotIdPage from "./pages/ForgotIdPage";
@@ -38,6 +39,9 @@ const routerConfig = {
 };
 
 function App() {
+ useEffect(() => {
+    initializeOneSignal();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -46,52 +50,45 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <HistoryRouter history={history as any} {...routerConfig}>
-              <Routes>
-                <Route path="/" element={<WelcomeScreen />} />
-                <Route path="/login" element={<Index />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/exam/:id" element={<Exam />} />
-                <Route path="/exam-submitted" element={<ExamSubmittedPage />} />
-                <Route path="/forgot-id" element={<ForgotIdPage />} />
-                <Route path="/exam-cancelled" element={<ExamCancelled />} />
-                <Route path="/results" element={<ResultsPage />} />
-                
-                {/* Admin Routes */}
-                <Route path="/admin">
-                  <Route path="login" element={<AdminLogin />} />
-                  <Route element={<AdminLayout />}>
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="students" element={<StudentsPage />} />
-                    <Route path="results" element={<AdminResultsPage />} />
-                    <Route path="violations" element={<ViolationsPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                  </Route>
-                  
-                  {/* Superadmin Routes */}
-                  <Route path="superadmin" element={<SuperadminLayout />}>
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="dashboard" element={<SuperadminDashboard />} />
+            <div className="app-container">
+              <TitleBar />
+              <div className="app-content" style={{ marginTop: '30px' }}>
+                <HistoryRouter history={history as any} {...routerConfig}>
+                  <Routes>
+                    <Route path="/" element={<WelcomeScreen />} />
+                    <Route path="/login" element={<Index />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/exam/:id" element={<Exam />} />
+                    <Route path="/exam-submitted" element={<ExamSubmittedPage />} />
+                    <Route path="/forgot-id" element={<ForgotIdPage />} />
+                    <Route path="/exam-cancelled" element={<ExamCancelled />} />
+                    <Route path="/results" element={<ResultsPage />} />
                     
-                    {/* Exam Management Routes */}
-                    <Route path="exams" element={<ExamManagement />}>
-                      <Route index element={<Navigate to="status" replace />} />
-                      <Route path="status" element={<div>Exam Status</div>} />
-                      <Route path="schedule" element={<div>Exam Schedule</div>} />
-                      <Route path="configure" element={<div>Configure Exam</div>} />
+                    {/* Admin Routes */}
+                    <Route path="/admin">
+                      <Route path="login" element={<AdminLogin />} />
+                      <Route element={<AdminLayout />}>
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                        <Route path="dashboard" element={<AdminDashboard />} />
+                        <Route path="students" element={<StudentsPage />} />
+                        <Route path="results" element={<AdminResultsPage />} />
+                        <Route path="violations" element={<ViolationsPage />} />
+                        <Route path="settings" element={<SettingsPage />} />
+                      </Route>
+                      
+                      {/* Superadmin Routes */}
+                      <Route path="superadmin" element={<SuperadminLayout />}>
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                        <Route path="dashboard" element={<SuperadminDashboard />} />
+                        {/* Add more superadmin specific routes here */}
+                      </Route>
                     </Route>
                     
-                    {/* User Access Management */}
-                    <Route path="users" element={<UserAccessManagement />} />
-                    
-                    {/* Add more superadmin specific routes here */}
-                  </Route>
-                </Route>
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </HistoryRouter>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </HistoryRouter>
+              </div>
+            </div>
           </TooltipProvider>
         </AdminAuthProvider>
       </AuthProvider>

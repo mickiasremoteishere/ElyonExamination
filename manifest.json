@@ -1,0 +1,51 @@
+{
+  "background_color": "#ffffff",
+  "description": "Prepare for your future with Elyon Test. Access practice tests, track your progress, and achieve your academic goals.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "ElyonExam",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "ElyonE",
+  "start_url": "https://elyonexamination.vercel.app/",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://elyonexamination.vercel.app/favicon.ico",
+      "type": "image/x-icon",
+      "sizes": "208x223",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 208,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    },
+    {
+      "src": "https://elyonexamination.com/L.png",
+      "isSquare": false,
+      "isPng": true,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    },
+    {
+      "src": "https://elyonexamination.vercel.app/favicon.ico",
+      "type": "image/x-icon",
+      "sizes": "208x223",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 208,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ]
+}
